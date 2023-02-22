@@ -1,68 +1,38 @@
-import { useContext, useEffect, useState } from "react";
+import { useState, useContext } from "react";
 import styles from "./Homepage.module.scss";
 import Recipe from "./components/Recipe/Recipe";
 import Loading from "../../components/Loading/Loading";
 import { ApiContext } from "../../context/ApiContext";
+import Search from "./components/Search/Search";
+import { useFecthData } from "../../hooks/useFetchData";
 
-export default function Homepage() {
-  const [recipes, setRecipes] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function HomePage() {
   const [filter, setFilter] = useState("");
+  const [page, setPage] = useState(1);
   const BASE_URL_API = useContext(ApiContext);
+  const [[recipes, setRecipes], isLoading] = useFecthData(BASE_URL_API, page);
 
-  useEffect(() => {
-    let cancel = false;
-    async function fetchRecipes() {
-      try {
-        setIsLoading(true);
-        const response = await fetch(BASE_URL_API);
-        if (response.ok && !cancel) {
-          const recipes = await response.json();
-          setRecipes(Array.isArray(recipes) ? recipes : [recipes]);
-        }
-      } catch (e) {
-        console.log("ERREUR");
-      } finally {
-        if (cancel) {
-          setIsLoading(false);
-        }
-      }
-    }
-    fetchRecipes();
-    return () => {
-      cancel = true;
-    };
-  }, [BASE_URL_API]);
-
-  function updateRecipe(updateRecipe) {
+  function updateRecipe(updatedRecipe) {
     setRecipes(
-      recipes.map((r) => (r._id === r.updateRecipe._id ? updateRecipe : r))
+      recipes.map((r) => (r._id === updatedRecipe._id ? updatedRecipe : r))
     );
   }
 
-  function handleInput(e) {
-    const filter = e.target.value;
-    setFilter(filter.trim().toLowerCase());
+  function deleteRecipe(_id) {
+    setRecipes(recipes.filter((r) => r._id !== _id));
   }
 
   return (
     <div className="flex-fill container d-flex flex-column p-20">
-      <h1 className="my-30">Découvrez nos nouvelles recettes</h1>
+      <h1 className="my-30">
+        Découvrez nos nouvelles recettes{" "}
+        <small className={styles.small}>- {recipes.length}</small>
+      </h1>
       <div
         className={`card flex-fill d-flex flex-column p-20 mb-20 ${styles.contentCard}`}
       >
-        <div
-          className={`d-flex flex-row justify-content-center align-item-center my-30 ${styles.searchBar}`}
-        >
-          <i className="fa-solid fa-magnifying-glass mr-15"></i>
-          <input
-            onInput={handleInput}
-            className="flex-fill"
-            type="text"
-            placeholder="Rechercher"
-          />
-        </div>
-        {isLoading ? (
+        <Search setFilter={setFilter} />
+        {isLoading && !recipes.length ? (
           <Loading />
         ) : (
           <div className={styles.grid}>
@@ -72,11 +42,17 @@ export default function Homepage() {
                 <Recipe
                   key={r._id}
                   recipe={r}
+                  deleteRecipe={deleteRecipe}
                   toggleLikedRecipe={updateRecipe}
                 />
               ))}
           </div>
         )}
+        <div className="d-flex flex-row justify-content-center align-items-center p-20">
+          <button onClick={() => setPage(page + 1)} className="btn btn-primary">
+            Charger plus de recettes
+          </button>
+        </div>
       </div>
     </div>
   );
