@@ -1,24 +1,25 @@
-import { useState, useContext } from "react";
-import styles from "./Homepage.module.scss";
+import React, { useState } from "react";
+import styles from "./HomePage.module.scss";
 import Recipe from "./components/Recipe/Recipe";
 import Loading from "../../components/Loading/Loading";
-import { ApiContext } from "../../context/ApiContext";
 import Search from "./components/Search/Search";
-import { useFecthData } from "../../hooks/useFetchData";
+import { useFetchRecipes } from "../../hooks";
+import { updateRecipe as updateR, deleteRecipe as deleteR } from "../../apis";
 
 export default function HomePage() {
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(1);
-  const BASE_URL_API = useContext(ApiContext);
-  const [[recipes, setRecipes], isLoading] = useFecthData(BASE_URL_API, page);
+  const [[recipes, setRecipes], isLoading] = useFetchRecipes(page);
 
-  function updateRecipe(updatedRecipe) {
+  async function updateRecipe(updatedRecipe) {
+    const savedRecipe = await updateR(updatedRecipe);
     setRecipes(
-      recipes.map((r) => (r._id === updatedRecipe._id ? updatedRecipe : r))
+      recipes.map((r) => (r._id === savedRecipe._id ? savedRecipe : r))
     );
   }
 
-  function deleteRecipe(_id) {
+  async function deleteRecipe(_id) {
+    await deleteR(_id);
     setRecipes(recipes.filter((r) => r._id !== _id));
   }
 
@@ -42,8 +43,8 @@ export default function HomePage() {
                 <Recipe
                   key={r._id}
                   recipe={r}
+                  updateRecipe={updateRecipe}
                   deleteRecipe={deleteRecipe}
-                  toggleLikedRecipe={updateRecipe}
                 />
               ))}
           </div>

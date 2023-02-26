@@ -1,16 +1,15 @@
+import { router } from "./router";
+
+import { RouterProvider } from "react-router-dom";
+import "./assets/styles/index.scss";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./assets/styles/index.scss";
-import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { ApiContext } from "./context/ApiContext";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <ApiContext.Provider value="https://restapi.fr/api/testcook">
-      <App />
-    </ApiContext.Provider>
+    <RouterProvider router={router}> </RouterProvider>
   </React.StrictMode>
 );
 
